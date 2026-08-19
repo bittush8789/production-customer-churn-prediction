@@ -1,0 +1,68 @@
+name: RetainAI CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, cicd ]
+  pull_request:
+    branches: [ main, cicd ]
+
+jobs:
+  # 1. Continuous Integration (Lint, Test, Model Verification)
+  test-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute Automated Test Suite (Pytest)
+        run: |
+          pytest -v --color=yes
+
+      - name: Test End-to-End Prediction Inference
+        run: |
+          python -c "
+          from backend.predictor import ChurnPredictor
+          p = ChurnPredictor()
+          test_sample = {
+              'gender': 'Female', 'SeniorCitizen': 0, 'Partner': 'No', 'Dependents': 'No',
+              'tenure': 2, 'PhoneService': 'Yes', 'MultipleLines': 'No', 'InternetService': 'Fiber optic',
+              'OnlineSecurity': 'No', 'OnlineBackup': 'No', 'DeviceProtection': 'No', 'TechSupport': 'No',
+              'StreamingTV': 'Yes', 'StreamingMovies': 'Yes', 'Contract': 'Month-to-month',
+              'PaperlessBilling': 'Yes', 'PaymentMethod': 'Electronic check',
+              'MonthlyCharges': 95.5, 'TotalCharges': 191.0
+          }
+          res = p.predict(test_sample)
+          print('Inference verification passed! Result:', res['risk_level'], f'({res[\"probability_pct\"]}%)')
+          assert 0.0 <= res['probability'] <= 1.0
+          assert res['risk_level'] in ['Low', 'Medium', 'High']
+          "
+
+  # 2. Continuous Delivery (Docker Build & Security Check)
+  docker-build:
+    needs: test-and-verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image (Non-Root Verification)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: retainai-churn-prediction:latest
