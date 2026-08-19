@@ -25,6 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Train Machine Learning Pipeline & Build Artifacts
+        run: |
+          python ml/src/train.py
+
       - name: Execute Automated Test Suite (Pytest)
         run: |
           pytest -v --color=yes

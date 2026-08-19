@@ -28,11 +28,27 @@ class ChurnPredictor:
         
     def _load_artifacts(self):
         if not os.path.exists(self.model_path) or not os.path.exists(self.pipeline_path):
-            print(f"Warning: Artifacts not found in {self.models_dir}. Please run training first.")
-            return
-            
-        self.model = joblib.load(self.model_path)
-        self.pipeline = joblib.load(self.pipeline_path)
+            print(f"Artifacts not found in {self.models_dir}. Running initial training...")
+            try:
+                from ml.src.train import train_and_compare_models
+                train_and_compare_models()
+            except Exception as e:
+                print(f"Warning: Automatic training initialization error: {e}")
+                return
+
+        try:
+            self.model = joblib.load(self.model_path)
+            self.pipeline = joblib.load(self.pipeline_path)
+        except Exception as e:
+            print(f"Notice: Artifact unpickling error due to environment differences ({e}). Retraining...")
+            try:
+                from ml.src.train import train_and_compare_models
+                train_and_compare_models()
+                self.model = joblib.load(self.model_path)
+                self.pipeline = joblib.load(self.pipeline_path)
+            except Exception as retrain_err:
+                print(f"Retraining failed: {retrain_err}")
+                return
         
         if os.path.exists(self.meta_path):
             with open(self.meta_path, "r", encoding="utf-8") as f:
