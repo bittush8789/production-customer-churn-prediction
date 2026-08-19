@@ -132,5 +132,10 @@ if __name__ == '__main__':
     print("Step 1:", task_data_ingestion())
     print("Step 2:", task_data_preprocessing())
     print("Step 3:", task_model_training())
-    print("Step 4:", task_model_evaluation_gate(ti=type('obj', (object,), {'xcom_pull': lambda **k: None})()))
+    
+    class MockTI:
+        def xcom_pull(self, *args, **kwargs):
+            return None
+            
+    print("Step 4:", task_model_evaluation_gate(ti=MockTI()))
     print("All Airflow pipeline tasks verified successfully!")
