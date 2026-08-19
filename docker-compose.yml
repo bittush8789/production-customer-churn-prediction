@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  churn-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: retainai-churn-prediction:latest
+    container_name: retainai_churn_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      # Mount models folder if model hot-reloading is desired
+      - ./ml/models:/app/ml/models:ro

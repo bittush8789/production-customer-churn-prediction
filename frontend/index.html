@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-Powered Customer Churn Prediction Dashboard with Machine Learning, Real-Time Risk Scoring, and SHAP Explainability.">
+  <title>RetainIQ | Enterprise Customer Churn Prediction & Explainable AI</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-theme">
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-chart-line-up"></i>
+          <span class="logo-pulse"></span>
+        </div>
+        <div class="brand-text">
+          <h2>Retain<span>AI</span></h2>
+          <span class="badge-sub">ML Churn Engine</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard" id="nav-tab-dashboard">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Overview Dashboard</span>
+        </button>
+        <button class="nav-item" data-tab="prediction" id="nav-tab-prediction">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Churn Predictor</span>
+        </button>
+        <button class="nav-item" data-tab="models" id="nav-tab-models">
+          <i class="fa-solid fa-brain-circuit"></i>
+          <span>Model Benchmarks</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="model-status-card">
+          <div class="status-indicator online"></div>
+          <div class="status-info">
+            <span class="status-title">Production Model</span>
+            <span class="status-name" id="sidebar-model-name">XGBoost Classifier</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title-group">
+            <h1 id="page-title">Executive Churn Dashboard</h1>
+            <p id="page-subtitle">Real-time telecommunication subscriber attrition analytics & predictive insights</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="api-badge" id="api-status-badge">
+            <span class="dot"></span>
+            <span>API: Connected</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-quick-predict">
+            <i class="fa-solid fa-bolt"></i> Quick Predict
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: EXECUTIVE DASHBOARD -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <!-- KPI Cards Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon blue">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="kpi-content">
+              <span class="kpi-label">Total Customers</span>
+              <h3 class="kpi-value" id="kpi-total-customers">7,043</h3>
+              <span class="kpi-trend positive"><i class="fa-solid fa-database"></i> Telecommunication Base</span>
+            </div>
+          </div>
+
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon red">
+              <i class="fa-solid fa-user-xmark"></i>
+            </div>
+            <div class="kpi-content">
+              <span class="kpi-label">Churned Customers</span>
+              <h3 class="kpi-value" id="kpi-churned-customers">1,869</h3>
+              <span class="kpi-trend negative"><i class="fa-solid fa-arrow-trend-up"></i> Lost Subscribers</span>
+            </div>
+          </div>
+
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon amber">
+              <i class="fa-solid fa-percent"></i>
+            </div>
+            <div class="kpi-content">
+              <span class="kpi-label">Overall Churn Rate</span>
+              <h3 class="kpi-value" id="kpi-churn-rate">26.5%</h3>
+              <span class="kpi-trend warning"><i class="fa-solid fa-triangle-exclamation"></i> Industry Avg ~22%</span>
+            </div>
+          </div>
+
+          <div class="kpi-card glass-card">
+            <div class="kpi-icon emerald">
+              <i class="fa-solid fa-shield-heart"></i>
+            </div>
+            <div class="kpi-content">
+              <span class="kpi-label">Retained Customers</span>
+              <h3 class="kpi-value" id="kpi-retained-customers">5,174</h3>
+              <span class="kpi-trend positive"><i class="fa-solid fa-check-double"></i> 73.5% Healthy Base</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Charts Grid -->
+        <div class="charts-grid">
+          <div class="chart-card glass-card">
+            <div class="chart-header">
+              <div>
+                <h3>Customer Churn Ratio</h3>
+                <p>Proportion of churned vs. active retained subscribers</p>
+              </div>
+              <span class="badge info">Distribution</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartChurnRatio"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card glass-card">
+            <div class="chart-header">
+              <div>
+                <h3>Churn by Contract Type</h3>
+                <p>Attrition rates across contract commitments</p>
+              </div>
+              <span class="badge info">High Impact</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartContractRisk"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card glass-card">
+            <div class="chart-header">
+              <div>
+                <h3>Tenure vs. Churn Hazard</h3>
+                <p>Subscriber loss distribution across lifecycle months</p>
+              </div>
+              <span class="badge warning">Lifecycle</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartTenureChurn"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card glass-card">
+            <div class="chart-header">
+              <div>
+                <h3>Key Attrition Drivers (SHAP Global)</h3>
+                <p>Top features driving customer departure risk</p>
+              </div>
+              <span class="badge info">Explainable AI</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="chartFeatureDrivers"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CHURN PREDICTOR -->
+      <section id="tab-prediction" class="tab-pane">
+        <!-- Preset Profiles Toolbar -->
+        <div class="presets-toolbar glass-card">
+          <div class="presets-info">
+            <i class="fa-solid fa-sparkles"></i>
+            <span><strong>Quick Load Test Profiles:</strong> Populate form fields instantly with realistic customer scenarios</span>
+          </div>
+          <div class="presets-actions">
+            <button class="btn btn-preset btn-risk" id="btn-preset-high" data-profile="high_risk">
+              <i class="fa-solid fa-fire"></i> High Risk Customer
+            </button>
+            <button class="btn btn-preset btn-loyal" id="btn-preset-loyal" data-profile="loyal_customer">
+              <i class="fa-solid fa-shield-check"></i> Loyal Customer
+            </button>
+            <button class="btn btn-preset btn-mod" id="btn-preset-moderate" data-profile="moderate_risk">
+              <i class="fa-solid fa-scale-balanced"></i> Moderate Risk
+            </button>
+            <button class="btn btn-preset btn-reset" id="btn-form-reset">
+              <i class="fa-solid fa-arrow-rotate-left"></i> Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="prediction-layout">
+          <!-- Form Section -->
+          <div class="form-container glass-card">
+            <div class="section-header">
+              <h2><i class="fa-solid fa-address-card"></i> Customer Information</h2>
+              <p>Enter subscriber attributes to calculate risk score and SHAP attributions</p>
+            </div>
+
+            <form id="churn-form" novalidate>
+              <!-- Fieldset 1: Demographics -->
+              <div class="form-section">
+                <h4 class="section-title"><i class="fa-solid fa-user"></i> Demographics & Profile</h4>
+                <div class="form-grid-3">
+                  <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender" required>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="SeniorCitizen">Senior Citizen</label>
+                    <select id="SeniorCitizen" name="SeniorCitizen" required>
+                      <option value="0">No (Under 65)</option>
+                      <option value="1">Yes (65+)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="Partner">Has Partner</label>
+                    <select id="Partner" name="Partner" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="Dependents">Has Dependents</label>
+                    <select id="Dependents" name="Dependents" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                    </select>
+                  </div>
+                  <div class="form-group span-2">
+                    <label for="tenure">
+                      Tenure (Months with Company)
+                      <span class="range-value" id="tenure-val">12 mo</span>
+                    </label>
+                    <div class="range-wrapper">
+                      <input type="range" id="tenure" name="tenure" min="0" max="72" value="12" class="slider">
+                      <input type="number" id="tenure-num" min="0" max="72" value="12" class="slider-input">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fieldset 2: Services Subscribed -->
+              <div class="form-section">
+                <h4 class="section-title"><i class="fa-solid fa-satellite-dish"></i> Phone & Internet Services</h4>
+                <div class="form-grid-3">
+                  <div class="form-group">
+                    <label for="PhoneService">Phone Service</label>
+                    <select id="PhoneService" name="PhoneService" required>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="MultipleLines">Multiple Lines</label>
+                    <select id="MultipleLines" name="MultipleLines" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No phone service">No phone service</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="InternetService">Internet Service</label>
+                    <select id="InternetService" name="InternetService" required>
+                      <option value="Fiber optic">Fiber optic (High speed)</option>
+                      <option value="DSL">DSL</option>
+                      <option value="No">No Internet Service</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="OnlineSecurity">Online Security</label>
+                    <select id="OnlineSecurity" name="OnlineSecurity" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No internet service">No internet service</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="OnlineBackup">Online Backup</label>
+                    <select id="OnlineBackup" name="OnlineBackup" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No internet service">No internet service</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="DeviceProtection">Device Protection</label>
+                    <select id="DeviceProtection" name="DeviceProtection" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No internet service">No internet service</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="TechSupport">Tech Support</label>
+                    <select id="TechSupport" name="TechSupport" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No internet service">No internet service</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="StreamingTV">Streaming TV</label>
+                    <select id="StreamingTV" name="StreamingTV" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No internet service">No internet service</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="StreamingMovies">Streaming Movies</label>
+                    <select id="StreamingMovies" name="StreamingMovies" required>
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No internet service">No internet service</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fieldset 3: Billing & Contract -->
+              <div class="form-section">
+                <h4 class="section-title"><i class="fa-solid fa-file-invoice-dollar"></i> Account & Billing Terms</h4>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label for="Contract">Contract Agreement</label>
+                    <select id="Contract" name="Contract" required>
+                      <option value="Month-to-month">Month-to-month (Flexible)</option>
+                      <option value="One year">One year commitment</option>
+                      <option value="Two year">Two year commitment</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="PaperlessBilling">Paperless Billing</label>
+                    <select id="PaperlessBilling" name="PaperlessBilling" required>
+                      <option value="Yes">Yes (Email/Web)</option>
+                      <option value="No">No (Paper mail)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="PaymentMethod">Payment Method</label>
+                    <select id="PaymentMethod" name="PaymentMethod" required>
+                      <option value="Electronic check">Electronic check</option>
+                      <option value="Mailed check">Mailed check</option>
+                      <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+                      <option value="Credit card (automatic)">Credit card (automatic)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="MonthlyCharges">Monthly Charges ($)</label>
+                    <div class="input-with-prefix">
+                      <span class="prefix">$</span>
+                      <input type="number" id="MonthlyCharges" name="MonthlyCharges" step="0.05" min="18" max="150" value="70.35" required>
+                    </div>
+                  </div>
+                  <div class="form-group span-2">
+                    <label for="TotalCharges">Total Lifetime Charges ($)</label>
+                    <div class="input-with-prefix">
+                      <span class="prefix">$</span>
+                      <input type="number" id="TotalCharges" name="TotalCharges" step="0.5" min="0" max="10000" value="844.20" required>
+                    </div>
+                    <small class="field-hint">Auto-calculated based on tenure & monthly rate, or customize manually.</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="form-submit-wrapper">
+                <button type="submit" class="btn btn-primary btn-lg" id="btn-predict-submit">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  <span>PREDICT CHURN PROBABILITY</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Result Display Section -->
+          <div class="result-container">
+            <!-- Initial State Placeholder -->
+            <div id="result-placeholder" class="glass-card result-empty">
+              <div class="empty-icon">
+                <i class="fa-solid fa-compass-drafting"></i>
+              </div>
+              <h3>Ready for Analysis</h3>
+              <p>Fill out the customer information or choose a quick preset profile, then click <strong>Predict Churn</strong> to evaluate attrition risk and explainability factors.</p>
+            </div>
+
+            <!-- Loading Spinner State -->
+            <div id="result-loading" class="glass-card result-loading hidden">
+              <div class="spinner"></div>
+              <h4>Evaluating ML Pipeline...</h4>
+              <p>Applying StandardScaler, OneHotEncoding, Feature Engineering, XGBoost inference, and computing SHAP attributions.</p>
+            </div>
+
+            <!-- Active Prediction Card -->
+            <div id="result-card" class="glass-card result-active hidden">
+              <div class="result-header">
+                <span class="badge-tag" id="res-model-tag">Model: XGBoost</span>
+                <span class="risk-badge" id="res-risk-badge">HIGH RISK</span>
+              </div>
+
+              <div class="score-card">
+                <div class="gauge-wrapper">
+                  <svg class="progress-ring" width="160" height="160">
+                    <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.08)" stroke-width="12" fill="transparent" r="68" cx="80" cy="80"/>
+                    <circle id="progress-ring-circle" class="progress-ring__circle" stroke="#ef4444" stroke-width="12" stroke-dasharray="427.26" stroke-dashoffset="427.26" stroke-linecap="round" fill="transparent" r="68" cx="80" cy="80"/>
+                  </svg>
+                  <div class="gauge-center">
+                    <span class="gauge-value" id="res-proba-value">87%</span>
+                    <span class="gauge-label">Churn Prob.</span>
+                  </div>
+                </div>
+
+                <div class="score-details">
+                  <span class="result-subtitle">PREDICTION OUTCOME</span>
+                  <h2 class="outcome-title" id="res-outcome-text">LIKELY TO CHURN</h2>
+                  <p class="outcome-desc" id="res-outcome-desc">This subscriber exhibits strong statistical markers indicative of high attrition.</p>
+                  <div class="risk-meter-bar">
+                    <div class="risk-fill" id="res-risk-fill" style="width: 87%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top SHAP Factors Section -->
+              <div class="factors-section">
+                <div class="factors-header">
+                  <h4><i class="fa-solid fa-chart-simple"></i> Top Influencing Risk Factors (SHAP)</h4>
+                  <span class="badge outline">Explainable AI</span>
+                </div>
+                <div id="res-factors-list" class="factors-list">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+
+              <!-- Actionable Retention Recommendations -->
+              <div class="recommendations-section">
+                <div class="recs-header">
+                  <h4><i class="fa-solid fa-lightbulb"></i> Recommended Retention Actions</h4>
+                  <span class="badge outline-emerald">Prescriptive AI</span>
+                </div>
+                <div id="res-recs-list" class="recs-list">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: MODEL BENCHMARKS -->
+      <section id="tab-models" class="tab-pane">
+        <div class="benchmarks-container">
+          <div class="benchmark-summary glass-card">
+            <div class="benchmark-header">
+              <div>
+                <h2>Model Comparison & Evaluation Matrix</h2>
+                <p>Trained and cross-validated with SMOTE class imbalance handling and hyperparameter tuning</p>
+              </div>
+              <div class="winner-badge">
+                <i class="fa-solid fa-trophy"></i>
+                <span>Selected: <strong>XGBoost Classifier</strong></span>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="benchmark-table">
+                <thead>
+                  <tr>
+                    <th>Model Architecture</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall (Churn)</th>
+                    <th>F1 Score</th>
+                    <th>ROC-AUC</th>
+                    <th>Composite Score</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="models-table-body">
+                  <tr>
+                    <td><strong>XGBoost Classifier</strong></td>
+                    <td>74.80%</td>
+                    <td>51.61%</td>
+                    <td><span class="highlight-val">81.28%</span></td>
+                    <td>63.14%</td>
+                    <td><span class="highlight-val">84.53%</span></td>
+                    <td><strong>0.7714</strong></td>
+                    <td><span class="badge success">Active in Prod</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Random Forest</strong></td>
+                    <td>74.52%</td>
+                    <td>51.29%</td>
+                    <td>79.68%</td>
+                    <td>62.41%</td>
+                    <td>84.25%</td>
+                    <td>0.7633</td>
+                    <td><span class="badge neutral">Benchmark</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Logistic Regression</strong></td>
+                    <td>73.81%</td>
+                    <td>50.44%</td>
+                    <td>77.01%</td>
+                    <td>60.95%</td>
+                    <td>84.58%</td>
+                    <td>0.7522</td>
+                    <td><span class="badge neutral">Baseline</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ML Architecture Pipeline Cards -->
+          <div class="pipeline-cards-grid">
+            <div class="pipe-card glass-card">
+              <div class="pipe-icon"><i class="fa-solid fa-filter"></i></div>
+              <h3>1. Preprocessing</h3>
+              <p>ColumnTransformer with Median Imputation, StandardScaler, and OneHotEncoder for categoricals.</p>
+            </div>
+            <div class="pipe-card glass-card">
+              <div class="pipe-icon"><i class="fa-solid fa-gears"></i></div>
+              <h3>2. Feature Engineering</h3>
+              <p>Tenure groups, number of subscribed services, monthly charge per service, and contract risk indicators.</p>
+            </div>
+            <div class="pipe-card glass-card">
+              <div class="pipe-icon"><i class="fa-solid fa-scale-unbalanced-flip"></i></div>
+              <h3>3. SMOTE Balancing</h3>
+              <p>Synthetic Minority Over-sampling Technique to balance 73.5% / 26.5% raw class distribution.</p>
+            </div>
+            <div class="pipe-card glass-card">
+              <div class="pipe-icon"><i class="fa-solid fa-microchip"></i></div>
+              <h3>4. SHAP Explainability</h3>
+              <p>TreeExplainer computing exact Shapley feature attributions for every individual customer prediction.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

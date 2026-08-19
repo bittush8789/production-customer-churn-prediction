@@ -1,0 +1,148 @@
+{
+  "best_model_name": "Random Forest",
+  "composite_score": 0.7645,
+  "metrics": {
+    "model_name": "Random Forest",
+    "accuracy": 0.7488,
+    "precision": 0.5174,
+    "recall": 0.7968,
+    "f1_score": 0.6274,
+    "roc_auc": 0.8431,
+    "confusion_matrix": [
+      [
+        757,
+        278
+      ],
+      [
+        76,
+        298
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.9087635054021609,
+        "recall": 0.7314009661835749,
+        "f1-score": 0.8104925053533191,
+        "support": 1035.0
+      },
+      "1": {
+        "precision": 0.5173611111111112,
+        "recall": 0.7967914438502673,
+        "f1-score": 0.6273684210526316,
+        "support": 374.0
+      },
+      "accuracy": 0.7487579843860894,
+      "macro avg": {
+        "precision": 0.7130623082566361,
+        "recall": 0.7640962050169211,
+        "f1-score": 0.7189304632029754,
+        "support": 1409.0
+      },
+      "weighted avg": {
+        "precision": 0.8048710316868646,
+        "recall": 0.7487579843860894,
+        "f1-score": 0.7618846930549109,
+        "support": 1409.0
+      }
+    }
+  },
+  "all_models_comparison": [
+    {
+      "model_name": "Logistic Regression",
+      "accuracy": 0.7388,
+      "precision": 0.5053,
+      "recall": 0.7701,
+      "f1_score": 0.6102,
+      "roc_auc": 0.8456,
+      "composite_score": 0.7523
+    },
+    {
+      "model_name": "Random Forest",
+      "accuracy": 0.7488,
+      "precision": 0.5174,
+      "recall": 0.7968,
+      "f1_score": 0.6274,
+      "roc_auc": 0.8431,
+      "composite_score": 0.7645
+    },
+    {
+      "model_name": "XGBoost",
+      "accuracy": 0.7977,
+      "precision": 0.6551,
+      "recall": 0.5027,
+      "f1_score": 0.5688,
+      "roc_auc": 0.8454,
+      "composite_score": 0.6596
+    }
+  ],
+  "feature_names": [
+    "tenure",
+    "MonthlyCharges",
+    "TotalCharges",
+    "num_services",
+    "charge_per_service",
+    "charges_to_tenure_ratio",
+    "gender_Female",
+    "gender_Male",
+    "SeniorCitizen_0",
+    "SeniorCitizen_1",
+    "Partner_No",
+    "Partner_Yes",
+    "Dependents_No",
+    "Dependents_Yes",
+    "PhoneService_No",
+    "PhoneService_Yes",
+    "MultipleLines_No",
+    "MultipleLines_No phone service",
+    "MultipleLines_Yes",
+    "InternetService_DSL",
+    "InternetService_Fiber optic",
+    "InternetService_No",
+    "OnlineSecurity_No",
+    "OnlineSecurity_No internet service",
+    "OnlineSecurity_Yes",
+    "OnlineBackup_No",
+    "OnlineBackup_No internet service",
+    "OnlineBackup_Yes",
+    "DeviceProtection_No",
+    "DeviceProtection_No internet service",
+    "DeviceProtection_Yes",
+    "TechSupport_No",
+    "TechSupport_No internet service",
+    "TechSupport_Yes",
+    "StreamingTV_No",
+    "StreamingTV_No internet service",
+    "StreamingTV_Yes",
+    "StreamingMovies_No",
+    "StreamingMovies_No internet service",
+    "StreamingMovies_Yes",
+    "Contract_Month-to-month",
+    "Contract_One year",
+    "Contract_Two year",
+    "PaperlessBilling_No",
+    "PaperlessBilling_Yes",
+    "PaymentMethod_Bank transfer (automatic)",
+    "PaymentMethod_Credit card (automatic)",
+    "PaymentMethod_Electronic check",
+    "PaymentMethod_Mailed check",
+    "tenure_group_0-12m",
+    "tenure_group_13-24m",
+    "tenure_group_25-48m",
+    "tenure_group_49-60m",
+    "tenure_group_>60m",
+    "has_streaming_No",
+    "has_streaming_Yes",
+    "has_security_No",
+    "has_security_Yes",
+    "contract_risk_High",
+    "contract_risk_Low",
+    "contract_risk_Medium"
+  ],
+  "dataset_stats": {
+    "total_customers": 7043,
+    "churned_customers": 1869,
+    "retained_customers": 5174,
+    "churn_rate": 26.54,
+    "high_risk_estimate": 1972
+  }
+}
