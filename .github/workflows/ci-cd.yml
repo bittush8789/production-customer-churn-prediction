@@ -25,9 +25,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Train Machine Learning Pipeline & Build Artifacts
+      - name: Train Machine Learning Pipeline & Track with MLflow
         run: |
           python ml/src/train.py
+
+      - name: Verify DVC Pipeline Execution
+        run: |
+          dvc repro --force
 
       - name: Execute Automated Test Suite (Pytest)
         run: |

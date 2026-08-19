@@ -1,0 +1,11 @@
+# DVC ignore rules
++.*
++.git
++.hg
++.svn
++*.pyc
++__pycache__
++.venv
++venv
++.pytest_cache
++mlruns

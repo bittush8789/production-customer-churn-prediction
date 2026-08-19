@@ -1,0 +1,50 @@
+schema: '2.0'
+stages:
+  load_data:
+    cmd: python ml/src/load_data.py
+    deps:
+    - path: ml/src/load_data.py
+      hash: md5
+      md5: 54dc620c73b136a1051624e94dbf2175
+      size: 8202
+    outs:
+    - path: ml/data/customer_churn.csv
+      hash: md5
+      md5: 3b0bfab28a8101b4e4fdd08025a5c235
+      size: 970457
+  train_and_evaluate:
+    cmd: python ml/src/train.py
+    deps:
+    - path: ml/data/customer_churn.csv
+      hash: md5
+      md5: 3b0bfab28a8101b4e4fdd08025a5c235
+      size: 970457
+    - path: ml/src/evaluate.py
+      hash: md5
+      md5: 5e0838fc79b75ab1d946ac5cb473f349
+      size: 2105
+    - path: ml/src/feature_engineering.py
+      hash: md5
+      md5: c996ac56544fd6ced5e0631f1096b211
+      size: 4460
+    - path: ml/src/preprocessing.py
+      hash: md5
+      md5: ff29694cb64c8cfb07df203cf739439a
+      size: 3882
+    - path: ml/src/train.py
+      hash: md5
+      md5: a33f33e4017f4dc8f3abb6a9b1114593
+      size: 9892
+    outs:
+    - path: ml/models/churn_model.pkl
+      hash: md5
+      md5: 6a01dde3cb282b84a6257824659c2be5
+      size: 930057
+    - path: ml/models/model_meta.json
+      hash: md5
+      md5: 435eb9ea741d3a4d706c381b0a7dd17d
+      size: 3797
+    - path: ml/models/preprocessing.pkl
+      hash: md5
+      md5: 594592bbc61bc4c1d7e6a3291768e378
+      size: 10848

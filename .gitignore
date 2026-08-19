@@ -18,6 +18,12 @@ ENV/
 .coverage
 htmlcov/
 
+# MLOps: MLflow & DVC Local Caches
+mlruns/
+mlflow.db
+.dvc/cache/
+.dvc/tmp/
+
 # IDEs
 .vscode/
 .idea/

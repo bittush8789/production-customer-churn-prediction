@@ -1,0 +1,20 @@
+stages:
+  load_data:
+    cmd: python ml/src/load_data.py
+    deps:
+      - ml/src/load_data.py
+    outs:
+      - ml/data/customer_churn.csv
+
+  train_and_evaluate:
+    cmd: python ml/src/train.py
+    deps:
+      - ml/data/customer_churn.csv
+      - ml/src/train.py
+      - ml/src/preprocessing.py
+      - ml/src/feature_engineering.py
+      - ml/src/evaluate.py
+    outs:
+      - ml/models/churn_model.pkl
+      - ml/models/preprocessing.pkl
+      - ml/models/model_meta.json

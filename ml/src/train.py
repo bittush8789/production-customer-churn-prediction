@@ -10,6 +10,14 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 
+try:
+    import mlflow
+    import mlflow.sklearn
+    import mlflow.xgboost
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
+
 # Add project root to sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -26,17 +34,25 @@ MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file
 
 def train_and_compare_models(random_state: int = 42):
     """
-    Complete ML training workflow:
+    Complete ML training workflow with MLflow tracking:
     1. Load & clean data
     2. Stratified train/test split
     3. Fit preprocessing pipeline
     4. Apply SMOTE to training data
     5. Train & hyperparameter-tune Logistic Regression, Random Forest, XGBoost
     6. Evaluate all models on held-out test data
-    7. Select best model based on ROC-AUC, Recall & F1
-    8. Save artifacts (churn_model.pkl, preprocessing.pkl, model_meta.json)
+    7. Log runs, metrics & parameters to MLflow
+    8. Select best model based on ROC-AUC, Recall & F1
+    9. Save artifacts (churn_model.pkl, preprocessing.pkl, model_meta.json)
     """
     os.makedirs(MODELS_DIR, exist_ok=True)
+    
+    if MLFLOW_AVAILABLE:
+        try:
+            mlflow.set_experiment("Customer-Churn-Prediction")
+            print("[MLflow] Tracking active under experiment: 'Customer-Churn-Prediction'")
+        except Exception as e:
+            print(f"[MLflow] Notice: Could not set experiment ({e})")
     
     print("\n--- [1/6] Loading & Cleaning Dataset ---")
     df = ensure_dataset()
@@ -127,13 +143,12 @@ def train_and_compare_models(random_state: int = 42):
     
     print("\n--- [6/6] Model Selection & Export ---")
     candidates = [
-        {"name": "Logistic Regression", "model": best_lr, "metrics": lr_metrics},
-        {"name": "Random Forest", "model": best_rf, "metrics": rf_metrics},
-        {"name": "XGBoost", "model": best_xgb, "metrics": xgb_metrics}
+        {"name": "Logistic Regression", "model": best_lr, "metrics": lr_metrics, "params": lr_grid.best_params_},
+        {"name": "Random Forest", "model": best_rf, "metrics": rf_metrics, "params": rf_grid.best_params_},
+        {"name": "XGBoost", "model": best_xgb, "metrics": xgb_metrics, "params": xgb_grid.best_params_}
     ]
     
     # Selection criteria: Composite score weighting ROC-AUC (40%), F1 (30%), and Recall (30%)
-    # In churn prediction, catching churners (Recall) while maintaining high discriminative power (ROC-AUC) is key
     for cand in candidates:
         m = cand["metrics"]
         composite = 0.40 * m["roc_auc"] + 0.30 * m["f1_score"] + 0.30 * m["recall"]
@@ -143,6 +158,35 @@ def train_and_compare_models(random_state: int = 42):
     best_candidate = max(candidates, key=lambda c: c["composite_score"])
     print(f"\n WINNER: {best_candidate['name']} with Composite Score = {best_candidate['composite_score']:.4f}")
     
+    # MLflow Run Logging for all models
+    if MLFLOW_AVAILABLE:
+        for cand in candidates:
+            try:
+                run_name = f"train_{cand['name'].lower().replace(' ', '_')}"
+                with mlflow.start_run(run_name=run_name, nested=True):
+                    mlflow.log_params(cand["params"])
+                    mlflow.log_metrics({
+                        "accuracy": cand["metrics"]["accuracy"],
+                        "precision": cand["metrics"]["precision"],
+                        "recall": cand["metrics"]["recall"],
+                        "f1_score": cand["metrics"]["f1_score"],
+                        "roc_auc": cand["metrics"]["roc_auc"],
+                        "composite_score": cand["composite_score"]
+                    })
+                    is_winner = (cand["name"] == best_candidate["name"])
+                    mlflow.set_tags({
+                        "model_name": cand["name"],
+                        "is_winner": str(is_winner),
+                        "status": "production_candidate" if is_winner else "benchmark"
+                    })
+                    if is_winner:
+                        if "XGB" in cand["name"]:
+                            mlflow.xgboost.log_model(cand["model"], artifact_path="model")
+                        else:
+                            mlflow.sklearn.log_model(cand["model"], artifact_path="model")
+            except Exception as e:
+                print(f"[MLflow] Warning during logging {cand['name']}: {e}")
+                
     # Save artifacts
     model_path = os.path.join(MODELS_DIR, "churn_model.pkl")
     pipeline_path = os.path.join(MODELS_DIR, "preprocessing.pkl")
