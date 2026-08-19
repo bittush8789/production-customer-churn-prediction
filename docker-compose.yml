@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # 1. Main Customer Churn Prediction Web Application
   churn-app:
     build:
       context: .
@@ -21,5 +22,26 @@ services:
       retries: 3
       start_period: 10s
     volumes:
-      # Mount models folder if model hot-reloading is desired
       - ./ml/models:/app/ml/models:ro
+
+  # 2. Apache Airflow Standalone Service (ML Pipeline Orchestration)
+  airflow:
+    image: apache/airflow:2.8.1-python3.11
+    container_name: retainai_airflow
+    restart: unless-stopped
+    profiles: ["airflow"]
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=false
+      - _AIRFLOW_DB_MIGRATE=true
+      - _AIRFLOW_WWW_USER_CREATE=true
+      - _AIRFLOW_WWW_USER_USERNAME=admin
+      - _AIRFLOW_WWW_USER_PASSWORD=admin
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./ml:/opt/airflow/ml
+    command: standalone
